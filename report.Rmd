@@ -74,7 +74,11 @@ penguins |>
               ))  ->tbl_1
 
 lm(bill_length_mm~ species+sex+flipper_length_mm, data = penguins) |>
-  tbl_regression() |>
+  tbl_regression(, 
+              labels = list(
+                species ~ "Species",
+                bill_length_mm ~ "Bill Length (mm)"
+              )) |>
   add_global_p()->tbl_lm
 
 tbl_merge(list(tbl_1, tbl_lm), 
@@ -83,6 +87,7 @@ tbl_merge(list(tbl_1, tbl_lm),
   set_caption("Summary statistics and regression model for penguins dataset")
 ```
 
+Males are on average `r inline_text(tbl_lm, variable = sex, level = "male", pattern = "{estimate} mm (95% CI: {conf.low}- {conf.high}mm)")` larger in bill length compared to females (`r inline_text(tbl_lm, variable = sex, pattern = "{p.value}")`). 
 
 ```{r}
 ?tbl_uvregression
