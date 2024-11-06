@@ -1,0 +1,90 @@
+---
+date: "Last compiled on `r format(Sys.time(), '%d %B, %Y')`"
+author: "Kristy Robledo"
+title: "Statistical report"
+output: 
+  officedown::rdocx_document:
+    page_margins:
+      bottom: 1
+      top: 1
+      right: 1
+      left: 1
+      header: 0.5
+      footer: 0.5
+      gutter: 0
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+
+library(gtsummary)
+library(tidyverse)
+library(palmerpenguins)
+library(flextable)
+
+```
+
+## tbl_summary
+
+```{r, tab.id = "tab1"}
+
+
+# create a table
+penguins |>
+  select(species, sex, bill_length_mm, bill_depth_mm, flipper_length_mm) |>
+  tbl_summary(by = sex, 
+              type = list(all_continuous() ~ "continuous2"),
+              statistic = list(all_continuous() ~ c("{N_nonmiss}", "{mean}  ({sd})", "{min}-{max}")), 
+              label = list(
+                species ~ "Species",
+                bill_length_mm ~ "Bill Length (mm)"
+              )) |>
+  add_overall() |>
+  add_p() ->tbl_base
+
+tbl_base |>
+  as_flex_table() |>
+  set_caption("Summary statistics for penguins dataset")
+```
+
+In the females, there are `r inline_text(tbl_base, variable ="species", level="Adelie", column="female")` Adelie species, and overall there are `r inline_text(tbl_base, variable ="species", level="Adelie", column="stat_0")`, 
+
+## tbl_regression
+
+```{r, tab.id="tab1"}
+lm(bill_length_mm~ species+sex+flipper_length_mm, data = penguins) |>
+  tbl_regression() |>
+  add_global_p() |>
+  as_flex_table() |>
+  set_caption("Regression model for bill length")
+
+```
+
+## tbl_stack tbl_merge
+
+```{r, tab.id="tab2"}
+penguins |>
+  select(species, sex, bill_length_mm, bill_depth_mm, flipper_length_mm) |>
+  tbl_summary(by = sex, 
+              type = list(all_continuous() ~ "continuous2"),
+              statistic = list(all_continuous() ~ c("{N_nonmiss}", "{mean}  ({sd})", "{min}-{max}")), 
+              label = list(
+                species ~ "Species",
+                bill_length_mm ~ "Bill Length (mm)"
+              ))  ->tbl_1
+
+lm(bill_length_mm~ species+sex+flipper_length_mm, data = penguins) |>
+  tbl_regression() |>
+  add_global_p()->tbl_lm
+
+tbl_merge(list(tbl_1, tbl_lm), 
+          tab_spanner = c("**Summary statistics**", "**Regression model**")) |>
+  as_flex_table() |>
+  set_caption("Summary statistics and regression model for penguins dataset")
+```
+
+
+```{r}
+?tbl_uvregression
+```
+
